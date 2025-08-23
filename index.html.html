@@ -1,0 +1,707 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MovieFlix - Discover Great Films</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .movie-card {
+            transition: all 0.3s ease;
+        }
+        .movie-card:hover {
+            transform: scale(1.05);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+        }
+        .rating-circle {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            position: absolute;
+            top: 10px;
+            right: 10px;
+        }
+        .hero-section {
+            background: linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)), url('https://image.tmdb.org/t/p/original/wwemzKWzjKYJFfCeiB57q3r4Bcm.png');
+            background-size: cover;
+            background-position: center;
+        }
+        .search-input:focus {
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.5);
+        }
+        .nav-link {
+            position: relative;
+        }
+        .nav-link::after {
+            content: '';
+            position: absolute;
+            width: 0;
+            height: 2px;
+            bottom: -2px;
+            left: 0;
+            background-color: #4299e1;
+            transition: width 0.3s ease;
+        }
+        .nav-link:hover::after {
+            width: 100%;
+        }
+        .active-nav::after {
+            width: 100%;
+        }
+        .loader {
+            border-top-color: #4299e1;
+            animation: spinner 0.8s linear infinite;
+        }
+        @keyframes spinner {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body class="bg-gray-900 text-white min-h-screen">
+    <!-- Navigation -->
+    <nav class="bg-gray-800 shadow-lg sticky top-0 z-50">
+        <div class="container mx-auto px-4 py-3">
+            <div class="flex justify-between items-center">
+                <div class="flex items-center space-x-4">
+                    <a href="#" class="flex items-center space-x-2">
+                        <i class="fas fa-film text-blue-400 text-2xl"></i>
+                        <span class="text-xl font-bold text-white">MovieFlix</span>
+                    </a>
+                </div>
+                <div class="hidden md:flex items-center space-x-8">
+                    <a href="#home" class="nav-link active-nav text-white hover:text-blue-400 transition duration-300">Home</a>
+                    <a href="#movies" class="nav-link text-white hover:text-blue-400 transition duration-300">Movies</a>
+                    <a href="#about" class="nav-link text-white hover:text-blue-400 transition duration-300">About</a>
+                    <a href="#contact" class="nav-link text-white hover:text-blue-400 transition duration-300">Contact</a>
+                </div>
+                <div class="md:hidden">
+                    <button id="mobile-menu-button" class="text-white focus:outline-none">
+                        <i class="fas fa-bars text-2xl"></i>
+                    </button>
+                </div>
+            </div>
+            <!-- Mobile menu -->
+            <div id="mobile-menu" class="hidden md:hidden mt-4 pb-4">
+                <a href="#home" class="block px-3 py-2 rounded-md text-base font-medium text-white hover:bg-gray-700">Home</a>
+                <a href="#movies" class="block px-3 py-2 rounded-md text-base font-medium text-white hover:bg-gray-700">Movies</a>
+                <a href="#about" class="block px-3 py-2 rounded-md text-base font-medium text-white hover:bg-gray-700">About</a>
+                <a href="#contact" class="block px-3 py-2 rounded-md text-base font-medium text-white hover:bg-gray-700">Contact</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section id="home" class="hero-section flex items-center justify-center py-20 md:py-32 px-4">
+        <div class="container mx-auto text-center">
+            <h1 class="text-4xl md:text-6xl font-bold mb-6 text-white">Discover Your Next Favorite Movie</h1>
+            <p class="text-xl md:text-2xl mb-8 text-gray-300">Explore thousands of movies, find ratings, and get recommendations</p>
+            <div class="max-w-md mx-auto relative">
+                <input type="text" id="hero-search" placeholder="Search for movies..." class="w-full px-6 py-3 rounded-full bg-gray-800 text-white border border-gray-700 focus:border-blue-500 search-input">
+                <button id="hero-search-btn" class="absolute right-2 top-1/2 transform -translate-y-1/2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-full">
+                    <i class="fas fa-search"></i>
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Trending Movies Section -->
+    <section class="py-12 px-4 bg-gray-900">
+        <div class="container mx-auto">
+            <h2 class="text-3xl font-bold mb-8 text-center">Trending This Week</h2>
+            <div id="trending-movies" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+                <!-- Movies will be loaded here -->
+                <div class="flex justify-center items-center py-12">
+                    <div class="loader ease-linear rounded-full border-4 border-t-4 border-gray-200 h-12 w-12"></div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Movies Section -->
+    <section id="movies" class="py-12 px-4 bg-gray-800">
+        <div class="container mx-auto">
+            <h2 class="text-3xl font-bold mb-8 text-center">Browse Movies</h2>
+            <div class="flex flex-col md:flex-row justify-between items-center mb-8">
+                <div class="w-full md:w-1/2 mb-4 md:mb-0">
+                    <div class="relative">
+                        <input type="text" id="movie-search" placeholder="Search movies by title..." class="w-full px-6 py-3 rounded-full bg-gray-700 text-white border border-gray-600 focus:border-blue-500 search-input">
+                        <button id="search-btn" class="absolute right-2 top-1/2 transform -translate-y-1/2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-full">
+                            <i class="fas fa-search"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="w-full md:w-1/3">
+                    <select id="genre-filter" class="w-full px-4 py-3 rounded-full bg-gray-700 text-white border border-gray-600 focus:border-blue-500 focus:outline-none">
+                        <option value="">All Genres</option>
+                        <!-- Genres will be loaded here -->
+                    </select>
+                </div>
+            </div>
+            <div id="movies-container" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+                <!-- Movies will be loaded here -->
+                <div class="flex justify-center items-center py-12 col-span-full">
+                    <div class="loader ease-linear rounded-full border-4 border-t-4 border-gray-200 h-12 w-12"></div>
+                </div>
+            </div>
+            <div class="flex justify-center mt-8">
+                <div id="pagination" class="flex space-x-2">
+                    <!-- Pagination will be loaded here -->
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- About Section -->
+    <section id="about" class="py-12 px-4 bg-gray-900">
+        <div class="container mx-auto">
+            <h2 class="text-3xl font-bold mb-8 text-center">About MovieFlix</h2>
+            <div class="max-w-4xl mx-auto">
+                <div class="bg-gray-800 rounded-lg shadow-xl p-6 md:p-8">
+                    <div class="flex flex-col md:flex-row items-center mb-6">
+                        <div class="md:w-1/3 mb-6 md:mb-0 flex justify-center">
+                            <i class="fas fa-film text-blue-400 text-8xl"></i>
+                        </div>
+                        <div class="md:w-2/3 md:pl-8">
+                            <h3 class="text-2xl font-bold mb-4">Our Mission</h3>
+                            <p class="text-gray-300 mb-4">MovieFlix is dedicated to helping movie enthusiasts discover, explore, and enjoy films from all around the world. We provide comprehensive information about movies, including ratings, reviews, and recommendations.</p>
+                            <p class="text-gray-300">Our platform uses the powerful TMDB API to bring you the most up-to-date and accurate movie information available.</p>
+                        </div>
+                    </div>
+                    <div class="mt-8">
+                        <h3 class="text-2xl font-bold mb-4">About TMDB API</h3>
+                        <p class="text-gray-300 mb-4">The Movie Database (TMDB) is a popular, user editable database for movies and TV shows. The TMDB API provides access to a vast collection of movie data, including:</p>
+                        <ul class="list-disc pl-6 text-gray-300 space-y-2">
+                            <li>Movie details (title, release date, runtime, etc.)</li>
+                            <li>Cast and crew information</li>
+                            <li>User ratings and reviews</li>
+                            <li>High-quality posters and backdrops</li>
+                            <li>Trailers and videos</li>
+                        </ul>
+                        <div class="mt-6">
+                            <a href="https://www.themoviedb.org/" target="_blank" class="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition duration-300">
+                                Visit TMDB Website
+                                <i class="fas fa-external-link-alt ml-2"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Contact Section -->
+    <section id="contact" class="py-12 px-4 bg-gray-800">
+        <div class="container mx-auto">
+            <h2 class="text-3xl font-bold mb-8 text-center">Contact Us</h2>
+            <div class="max-w-2xl mx-auto bg-gray-700 rounded-lg shadow-xl p-6 md:p-8">
+                <form id="contact-form">
+                    <div class="mb-4">
+                        <label for="name" class="block text-gray-300 mb-2">Name</label>
+                        <input type="text" id="name" class="w-full px-4 py-2 rounded-lg bg-gray-800 border border-gray-600 focus:border-blue-500 focus:outline-none text-white">
+                    </div>
+                    <div class="mb-4">
+                        <label for="email" class="block text-gray-300 mb-2">Email</label>
+                        <input type="email" id="email" class="w-full px-4 py-2 rounded-lg bg-gray-800 border border-gray-600 focus:border-blue-500 focus:outline-none text-white">
+                    </div>
+                    <div class="mb-4">
+                        <label for="message" class="block text-gray-300 mb-2">Message</label>
+                        <textarea id="message" rows="4" class="w-full px-4 py-2 rounded-lg bg-gray-800 border border-gray-600 focus:border-blue-500 focus:outline-none text-white"></textarea>
+                    </div>
+                    <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 px-4 rounded-lg font-medium transition duration-300">
+                        Send Message
+                    </button>
+                </form>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-gray-900 py-8 px-4">
+        <div class="container mx-auto">
+            <div class="flex flex-col md:flex-row justify-between items-center">
+                <div class="mb-4 md:mb-0">
+                    <a href="#" class="flex items-center space-x-2">
+                        <i class="fas fa-film text-blue-400 text-2xl"></i>
+                        <span class="text-xl font-bold text-white">MovieFlix</span>
+                    </a>
+                    <p class="text-gray-400 mt-2">Discover your next favorite movie</p>
+                </div>
+                <div class="flex space-x-6">
+                    <a href="#" class="text-gray-400 hover:text-white transition duration-300">
+                        <i class="fab fa-facebook-f text-xl"></i>
+                    </a>
+                    <a href="#" class="text-gray-400 hover:text-white transition duration-300">
+                        <i class="fab fa-twitter text-xl"></i>
+                    </a>
+                    <a href="#" class="text-gray-400 hover:text-white transition duration-300">
+                        <i class="fab fa-instagram text-xl"></i>
+                    </a>
+                    <a href="#" class="text-gray-400 hover:text-white transition duration-300">
+                        <i class="fab fa-github text-xl"></i>
+                    </a>
+                </div>
+            </div>
+            <div class="border-t border-gray-800 mt-8 pt-8 text-center text-gray-400">
+                <p>&copy; 2023 MovieFlix. All rights reserved. Powered by TMDB API.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Movie Details Modal -->
+    <div id="movie-modal" class="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 hidden">
+        <div class="bg-gray-800 rounded-lg max-w-4xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+            <div class="relative">
+                <button id="close-modal" class="absolute top-4 right-4 bg-gray-700 hover:bg-gray-600 text-white rounded-full w-10 h-10 flex items-center justify-center z-10">
+                    <i class="fas fa-times"></i>
+                </button>
+                <div id="modal-content" class="p-6">
+                    <!-- Movie details will be loaded here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // API Configuration
+        const API_KEY = '88fa507864f91647061286cb278ab420';
+        const BASE_URL = 'https://api.themoviedb.org/3';
+        const IMG_BASE_URL = 'https://image.tmdb.org/t/p/w500';
+        
+        // DOM Elements
+        const trendingMoviesContainer = document.getElementById('trending-movies');
+        const moviesContainer = document.getElementById('movies-container');
+        const genreFilter = document.getElementById('genre-filter');
+        const movieSearch = document.getElementById('movie-search');
+        const heroSearch = document.getElementById('hero-search');
+        const searchBtn = document.getElementById('search-btn');
+        const heroSearchBtn = document.getElementById('hero-search-btn');
+        const pagination = document.getElementById('pagination');
+        const movieModal = document.getElementById('movie-modal');
+        const closeModal = document.getElementById('close-modal');
+        const modalContent = document.getElementById('modal-content');
+        const mobileMenuButton = document.getElementById('mobile-menu-button');
+        const mobileMenu = document.getElementById('mobile-menu');
+        const navLinks = document.querySelectorAll('.nav-link');
+        
+        // State
+        let currentPage = 1;
+        let totalPages = 1;
+        let currentSearchTerm = '';
+        let currentGenre = '';
+        let genres = [];
+        
+        // Initialize the app
+        document.addEventListener('DOMContentLoaded', () => {
+            fetchTrendingMovies();
+            fetchGenres();
+            fetchMovies();
+            
+            // Event listeners
+            searchBtn.addEventListener('click', () => {
+                currentSearchTerm = movieSearch.value;
+                currentPage = 1;
+                fetchMovies();
+            });
+            
+            heroSearchBtn.addEventListener('click', () => {
+                currentSearchTerm = heroSearch.value;
+                currentPage = 1;
+                fetchMovies();
+                // Scroll to movies section
+                document.getElementById('movies').scrollIntoView({ behavior: 'smooth' });
+            });
+            
+            movieSearch.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    currentSearchTerm = movieSearch.value;
+                    currentPage = 1;
+                    fetchMovies();
+                }
+            });
+            
+            heroSearch.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    currentSearchTerm = heroSearch.value;
+                    currentPage = 1;
+                    fetchMovies();
+                    // Scroll to movies section
+                    document.getElementById('movies').scrollIntoView({ behavior: 'smooth' });
+                }
+            });
+            
+            genreFilter.addEventListener('change', () => {
+                currentGenre = genreFilter.value;
+                currentPage = 1;
+                fetchMovies();
+            });
+            
+            closeModal.addEventListener('click', () => {
+                movieModal.classList.add('hidden');
+            });
+            
+            mobileMenuButton.addEventListener('click', () => {
+                mobileMenu.classList.toggle('hidden');
+            });
+            
+            // Close mobile menu when clicking on a link
+            document.querySelectorAll('#mobile-menu a').forEach(link => {
+                link.addEventListener('click', () => {
+                    mobileMenu.classList.add('hidden');
+                });
+            });
+            
+            // Highlight active nav link based on scroll position
+            window.addEventListener('scroll', highlightNavLink);
+            
+            // Smooth scrolling for navigation links
+            document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+                anchor.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    
+                    const targetId = this.getAttribute('href');
+                    const targetElement = document.querySelector(targetId);
+                    
+                    if (targetElement) {
+                        targetElement.scrollIntoView({
+                            behavior: 'smooth'
+                        });
+                        
+                        // Update active nav link
+                        navLinks.forEach(link => {
+                            link.classList.remove('active-nav');
+                        });
+                        this.classList.add('active-nav');
+                    }
+                });
+            });
+        });
+        
+        // Highlight active nav link based on scroll position
+        function highlightNavLink() {
+            const sections = document.querySelectorAll('section');
+            let currentSection = '';
+            
+            sections.forEach(section => {
+                const sectionTop = section.offsetTop;
+                const sectionHeight = section.clientHeight;
+                
+                if (pageYOffset >= (sectionTop - 200)) {
+                    currentSection = section.getAttribute('id');
+                }
+            });
+            
+            navLinks.forEach(link => {
+                link.classList.remove('active-nav');
+                if (link.getAttribute('href') === `#${currentSection}`) {
+                    link.classList.add('active-nav');
+                }
+            });
+        }
+        
+        // Fetch trending movies
+        async function fetchTrendingMovies() {
+            try {
+                const response = await fetch(`${BASE_URL}/trending/movie/week?api_key=${API_KEY}`);
+                const data = await response.json();
+                displayTrendingMovies(data.results.slice(0, 10)); // Show top 10 trending movies
+            } catch (error) {
+                console.error('Error fetching trending movies:', error);
+                trendingMoviesContainer.innerHTML = '<p class="text-red-500 text-center">Failed to load trending movies. Please try again later.</p>';
+            }
+        }
+        
+        // Display trending movies
+        function displayTrendingMovies(movies) {
+            trendingMoviesContainer.innerHTML = '';
+            
+            if (movies.length === 0) {
+                trendingMoviesContainer.innerHTML = '<p class="text-gray-400 text-center col-span-full">No trending movies found.</p>';
+                return;
+            }
+            
+            movies.forEach(movie => {
+                const movieCard = document.createElement('div');
+                movieCard.className = 'movie-card bg-gray-800 rounded-lg overflow-hidden shadow-lg relative';
+                movieCard.innerHTML = `
+                    <img src="${movie.poster_path ? IMG_BASE_URL + movie.poster_path : 'https://via.placeholder.com/500x750?text=No+Poster'}" alt="${movie.title}" class="w-full h-64 md:h-80 object-cover">
+                    <div class="rating-circle ${getRatingColor(movie.vote_average)}">
+                        ${Math.round(movie.vote_average * 10)}%
+                    </div>
+                    <div class="p-4">
+                        <h3 class="font-bold text-lg mb-1 truncate">${movie.title}</h3>
+                        <p class="text-gray-400 text-sm">${movie.release_date ? movie.release_date.substring(0, 4) : 'N/A'}</p>
+                    </div>
+                `;
+                
+                movieCard.addEventListener('click', () => showMovieDetails(movie.id));
+                trendingMoviesContainer.appendChild(movieCard);
+            });
+        }
+        
+        // Fetch genres
+        async function fetchGenres() {
+            try {
+                const response = await fetch(`${BASE_URL}/genre/movie/list?api_key=${API_KEY}`);
+                const data = await response.json();
+                genres = data.genres;
+                populateGenreFilter();
+            } catch (error) {
+                console.error('Error fetching genres:', error);
+            }
+        }
+        
+        // Populate genre filter dropdown
+        function populateGenreFilter() {
+            genreFilter.innerHTML = '<option value="">All Genres</option>';
+            
+            genres.forEach(genre => {
+                const option = document.createElement('option');
+                option.value = genre.id;
+                option.textContent = genre.name;
+                genreFilter.appendChild(option);
+            });
+        }
+        
+        // Fetch movies based on search term and genre filter
+        async function fetchMovies() {
+            moviesContainer.innerHTML = '<div class="flex justify-center items-center py-12 col-span-full"><div class="loader ease-linear rounded-full border-4 border-t-4 border-gray-200 h-12 w-12"></div></div>';
+            
+            let url;
+            
+            if (currentSearchTerm) {
+                url = `${BASE_URL}/search/movie?api_key=${API_KEY}&query=${encodeURIComponent(currentSearchTerm)}&page=${currentPage}`;
+            } else if (currentGenre) {
+                url = `${BASE_URL}/discover/movie?api_key=${API_KEY}&with_genres=${currentGenre}&page=${currentPage}&sort_by=popularity.desc`;
+            } else {
+                url = `${BASE_URL}/discover/movie?api_key=${API_KEY}&page=${currentPage}&sort_by=popularity.desc`;
+            }
+            
+            try {
+                const response = await fetch(url);
+                const data = await response.json();
+                
+                totalPages = data.total_pages > 500 ? 500 : data.total_pages; // TMDB API limits to 500 pages
+                displayMovies(data.results);
+                displayPagination();
+            } catch (error) {
+                console.error('Error fetching movies:', error);
+                moviesContainer.innerHTML = '<p class="text-red-500 text-center col-span-full">Failed to load movies. Please try again later.</p>';
+            }
+        }
+        
+        // Display movies
+        function displayMovies(movies) {
+            moviesContainer.innerHTML = '';
+            
+            if (movies.length === 0) {
+                moviesContainer.innerHTML = '<p class="text-gray-400 text-center col-span-full">No movies found. Try a different search.</p>';
+                return;
+            }
+            
+            movies.forEach(movie => {
+                const movieCard = document.createElement('div');
+                movieCard.className = 'movie-card bg-gray-700 rounded-lg overflow-hidden shadow-lg relative';
+                movieCard.innerHTML = `
+                    <img src="${movie.poster_path ? IMG_BASE_URL + movie.poster_path : 'https://via.placeholder.com/500x750?text=No+Poster'}" alt="${movie.title}" class="w-full h-64 md:h-80 object-cover">
+                    <div class="rating-circle ${getRatingColor(movie.vote_average)}">
+                        ${Math.round(movie.vote_average * 10)}%
+                    </div>
+                    <div class="p-4">
+                        <h3 class="font-bold text-lg mb-1 truncate">${movie.title}</h3>
+                        <p class="text-gray-400 text-sm">${movie.release_date ? movie.release_date.substring(0, 4) : 'N/A'}</p>
+                        <div class="flex flex-wrap mt-2">
+                            ${movie.genre_ids.slice(0, 3).map(id => {
+                                const genre = genres.find(g => g.id === id);
+                                return genre ? `<span class="text-xs bg-gray-600 text-white px-2 py-1 rounded mr-1 mb-1">${genre.name}</span>` : '';
+                            }).join('')}
+                        </div>
+                    </div>
+                `;
+                
+                movieCard.addEventListener('click', () => showMovieDetails(movie.id));
+                moviesContainer.appendChild(movieCard);
+            });
+        }
+        
+        // Display pagination
+        function displayPagination() {
+            pagination.innerHTML = '';
+            
+            if (totalPages <= 1) return;
+            
+            // Previous button
+            const prevButton = document.createElement('button');
+            prevButton.className = `px-4 py-2 rounded-lg ${currentPage === 1 ? 'bg-gray-700 cursor-not-allowed' : 'bg-gray-600 hover:bg-gray-500'}`;
+            prevButton.innerHTML = '<i class="fas fa-chevron-left"></i>';
+            prevButton.disabled = currentPage === 1;
+            prevButton.addEventListener('click', () => {
+                if (currentPage > 1) {
+                    currentPage--;
+                    fetchMovies();
+                    window.scrollTo({ top: moviesContainer.offsetTop - 100, behavior: 'smooth' });
+                }
+            });
+            pagination.appendChild(prevButton);
+            
+            // Page numbers
+            const maxVisiblePages = 5;
+            let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
+            let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
+            
+            if (endPage - startPage + 1 < maxVisiblePages) {
+                startPage = Math.max(1, endPage - maxVisiblePages + 1);
+            }
+            
+            if (startPage > 1) {
+                const firstPageButton = document.createElement('button');
+                firstPageButton.className = 'px-4 py-2 rounded-lg bg-gray-600 hover:bg-gray-500';
+                firstPageButton.textContent = '1';
+                firstPageButton.addEventListener('click', () => {
+                    currentPage = 1;
+                    fetchMovies();
+                    window.scrollTo({ top: moviesContainer.offsetTop - 100, behavior: 'smooth' });
+                });
+                pagination.appendChild(firstPageButton);
+                
+                if (startPage > 2) {
+                    const ellipsis = document.createElement('span');
+                    ellipsis.className = 'px-2 py-2';
+                    ellipsis.textContent = '...';
+                    pagination.appendChild(ellipsis);
+                }
+            }
+            
+            for (let i = startPage; i <= endPage; i++) {
+                const pageButton = document.createElement('button');
+                pageButton.className = `px-4 py-2 rounded-lg ${i === currentPage ? 'bg-blue-600' : 'bg-gray-600 hover:bg-gray-500'}`;
+                pageButton.textContent = i;
+                pageButton.addEventListener('click', () => {
+                    currentPage = i;
+                    fetchMovies();
+                    window.scrollTo({ top: moviesContainer.offsetTop - 100, behavior: 'smooth' });
+                });
+                pagination.appendChild(pageButton);
+            }
+            
+            if (endPage < totalPages) {
+                if (endPage < totalPages - 1) {
+                    const ellipsis = document.createElement('span');
+                    ellipsis.className = 'px-2 py-2';
+                    ellipsis.textContent = '...';
+                    pagination.appendChild(ellipsis);
+                }
+                
+                const lastPageButton = document.createElement('button');
+                lastPageButton.className = 'px-4 py-2 rounded-lg bg-gray-600 hover:bg-gray-500';
+                lastPageButton.textContent = totalPages;
+                lastPageButton.addEventListener('click', () => {
+                    currentPage = totalPages;
+                    fetchMovies();
+                    window.scrollTo({ top: moviesContainer.offsetTop - 100, behavior: 'smooth' });
+                });
+                pagination.appendChild(lastPageButton);
+            }
+            
+            // Next button
+            const nextButton = document.createElement('button');
+            nextButton.className = `px-4 py-2 rounded-lg ${currentPage === totalPages ? 'bg-gray-700 cursor-not-allowed' : 'bg-gray-600 hover:bg-gray-500'}`;
+            nextButton.innerHTML = '<i class="fas fa-chevron-right"></i>';
+            nextButton.disabled = currentPage === totalPages;
+            nextButton.addEventListener('click', () => {
+                if (currentPage < totalPages) {
+                    currentPage++;
+                    fetchMovies();
+                    window.scrollTo({ top: moviesContainer.offsetTop - 100, behavior: 'smooth' });
+                }
+            });
+            pagination.appendChild(nextButton);
+        }
+        
+        // Show movie details in modal
+        async function showMovieDetails(movieId) {
+            try {
+                modalContent.innerHTML = '<div class="flex justify-center items-center py-12"><div class="loader ease-linear rounded-full border-4 border-t-4 border-gray-200 h-12 w-12"></div></div>';
+                movieModal.classList.remove('hidden');
+                
+                const [movieResponse, creditsResponse] = await Promise.all([
+                    fetch(`${BASE_URL}/movie/${movieId}?api_key=${API_KEY}`),
+                    fetch(`${BASE_URL}/movie/${movieId}/credits?api_key=${API_KEY}`)
+                ]);
+                
+                const movie = await movieResponse.json();
+                const credits = await creditsResponse.json();
+                
+                const directors = credits.crew.filter(person => person.job === 'Director');
+                const cast = credits.cast.slice(0, 5); // Show top 5 cast members
+                
+                modalContent.innerHTML = `
+                    <div class="flex flex-col md:flex-row">
+                        <div class="w-full md:w-1/3 mb-6 md:mb-0 md:pr-6">
+                            <img src="${movie.poster_path ? IMG_BASE_URL + movie.poster_path : 'https://via.placeholder.com/500x750?text=No+Poster'}" alt="${movie.title}" class="w-full rounded-lg shadow-lg">
+                        </div>
+                        <div class="w-full md:w-2/3">
+                            <h2 class="text-3xl font-bold mb-2">${movie.title}</h2>
+                            <div class="flex items-center mb-4">
+                                <div class="mr-4 ${getRatingColor(movie.vote_average)} w-12 h-12 rounded-full flex items-center justify-center font-bold">
+                                    ${Math.round(movie.vote_average * 10)}%
+                                </div>
+                                <div>
+                                    <p class="text-gray-300">${movie.release_date || 'N/A'} • ${movie.runtime ? `${Math.floor(movie.runtime / 60)}h ${movie.runtime % 60}m` : 'N/A'}</p>
+                                    <div class="flex flex-wrap mt-1">
+                                        ${movie.genres.map(genre => `<span class="text-xs bg-gray-600 text-white px-2 py-1 rounded mr-1 mb-1">${genre.name}</span>`).join('')}
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <h3 class="text-xl font-bold mt-6 mb-2">Overview</h3>
+                            <p class="text-gray-300 mb-6">${movie.overview || 'No overview available.'}</p>
+                            
+                            ${directors.length > 0 ? `
+                            <h3 class="text-xl font-bold mt-6 mb-2">Director${directors.length > 1 ? 's' : ''}</h3>
+                            <p class="text-gray-300 mb-6">${directors.map(d => d.name).join(', ')}</p>
+                            ` : ''}
+                            
+                            ${cast.length > 0 ? `
+                            <h3 class="text-xl font-bold mt-6 mb-2">Cast</h3>
+                            <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4 mb-6">
+                                ${cast.map(actor => `
+                                    <div class="text-center">
+                                        <img src="${actor.profile_path ? IMG_BASE_URL + actor.profile_path : 'https://via.placeholder.com/150?text=No+Image'}" alt="${actor.name}" class="w-full h-24 object-cover rounded-lg mb-2">
+                                        <p class="text-sm font-medium">${actor.name}</p>
+                                        <p class="text-xs text-gray-400">${actor.character}</p>
+                                    </div>
+                                `).join('')}
+                            </div>
+                            ` : ''}
+                            
+                            ${movie.homepage ? `
+                            <a href="${movie.homepage}" target="_blank" class="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition duration-300">
+                                <i class="fas fa-globe mr-2"></i> Official Website
+                            </a>
+                            ` : ''}
+                        </div>
+                    </div>
+                `;
+            } catch (error) {
+                console.error('Error fetching movie details:', error);
+                modalContent.innerHTML = '<p class="text-red-500 text-center py-8">Failed to load movie details. Please try again later.</p>';
+            }
+        }
+        
+        // Get rating color based on score
+        function getRatingColor(rating) {
+            const score = rating * 10;
+            if (score >= 70) return 'bg-green-600 text-white';
+            if (score >= 50) return 'bg-yellow-500 text-white';
+            return 'bg-red-600 text-white';
+        }
+    </script>
+</body>
+</html>
