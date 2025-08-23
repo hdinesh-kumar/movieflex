@@ -1,7 +1,7 @@
 # 🎬 MovieFlix – Movie Discovery Web Application
 
 ## 📖 Project Overview
-**MovieFlix** is a web-based movie discovery platform developed using **HTML, TailwindCSS, and JavaScript**.  
+**MovieFlix** is a web-based movie discovery platform developed using **HTML, CSS, and JavaScript**.  
 It leverages the **TMDB (The Movie Database) API** to provide users with real-time access to trending movies, ratings, genres, cast details, and more.  
 
 The project demonstrates skills in **frontend development**, **API integration**, and **UI/UX design** while maintaining responsiveness and usability.
