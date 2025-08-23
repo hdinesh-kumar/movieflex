@@ -25,7 +25,8 @@ The project demonstrates skills in **frontend development**, **API integration**
 
 - **Frontend**: HTML5, TailwindCSS, JavaScript (ES6+)  
 - **Icons & UI Enhancements**: Font Awesome  
-- **API Integration**: [TMDB API](https://www.themoviedb.org/)  
+- **API Integration**: [TMDB API](https://www.themoviedb.org/)
+- - **Live Demo**: [MovieFlix](https://hdinesh-kumar.github.io/movieflex/)  
 
 ---
 
